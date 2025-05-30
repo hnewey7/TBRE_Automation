@@ -1,8 +1,7 @@
-import pytest
-
 from src.InventorManager import InventorManager
 
-# - - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - -
+
 
 def test_connection():
     """

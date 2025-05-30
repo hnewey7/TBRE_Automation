@@ -1,8 +1,12 @@
 import win32com.client
-from win32com.client import gencache
+from win32com.client import (
+    gencache,
+)
 import logging.config
 import os
-from datetime import datetime
+from datetime import (
+    datetime,
+)
 import json
 
 # - - - - - - - - - - - - - - - - - - - - -
@@ -12,8 +16,11 @@ logger = logging.getLogger()
 
 # - - - - - - - - - - - - - - - - - - - - -
 
+
 class InventorManager:
-    def __init__(self):
+    def __init__(
+        self,
+    ):
         # Connect to Inventor application.
         ret = self.connect_to_inventor()
         if not ret:
@@ -21,7 +28,9 @@ class InventorManager:
         else:
             logger.info("Successfully connected to Inventor application.")
 
-    def connect_to_inventor(self):
+    def connect_to_inventor(
+        self,
+    ):
         """
         Connect to an existing Inventor application instance.
 
@@ -31,13 +40,19 @@ class InventorManager:
         try:
             self.app = win32com.client.Dispatch("Inventor.Application")
             self.app.Visible = True
-            CastTo = gencache.EnsureModule('{D98A091D-3A0F-4C3E-B36E-61F62068D488}', 0, 1, 0)
+            CastTo = gencache.EnsureModule(
+                "{D98A091D-3A0F-4C3E-B36E-61F62068D488}",
+                0,
+                1,
+                0,
+            )
             self.app = CastTo.Application(self.app)
             return True
         except Exception as e:
             logger.error(f"Error connecting to Inventor: {e}")
             return False
-        
+
+
 # - - - - - - - - - - - - - - - - - - - - -
 
 if __name__ == "__main__":
@@ -53,9 +68,13 @@ if __name__ == "__main__":
         # Create directory for current time.
         os.mkdir(log_path)
         # Set the filename for the log file.
-        config_dict["handlers"]["file"]["filename"] = f"logs/{current_time}/{current_time}_RoverRPi.log"
+        config_dict["handlers"]["file"][
+            "filename"
+        ] = f"logs/{current_time}/{current_time}_RoverRPi.log"
         logging.config.dictConfig(config_dict)
 
     # Create an instance of InventorManager to test the connection.
     manager = InventorManager()
-    logger.info(f"Active Document: {manager.app.ActiveDocument.Name if manager.app.ActiveDocument else 'No active document'}")
+    logger.info(
+        f"Active Document: {manager.app.ActiveDocument.Name if manager.app.ActiveDocument else 'No active document'}"
+    )
