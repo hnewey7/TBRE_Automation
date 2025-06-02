@@ -38,6 +38,18 @@ class InventorManager:
         except Exception as e:
             logger.error(f"Error connecting to Inventor: {e}")
             return False
+    
+    def disconnect(self):
+        """
+        Disconnect from the Inventor application.
+        """
+        try:
+            if self.app:
+                self.app.Quit()
+                logger.info("Disconnected from Inventor application.")
+                self.app = None
+        except Exception as e:
+            logger.error(f"Error disconnecting from Inventor: {e}")
 
 
 # - - - - - - - - - - - - - - - - - - - - -
