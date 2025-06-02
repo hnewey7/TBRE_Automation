@@ -15,12 +15,11 @@ repos:
     -   id: flake8
         args: ["--max-line-length=88"]
 
-- repo: local
-  hooks:
-  - id: pytest
-    name: pytest
-    entry: ./.venv/bin/pytest tests
-    language: system
-    types: [python]
-    pass_filenames: false
-    always_run: true
+repos:
+  - repo: local
+    hooks:
+      - id: pytest
+        name: Run pytest
+        entry: pytest
+        language: system
+        types: [python]
