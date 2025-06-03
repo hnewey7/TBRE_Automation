@@ -38,7 +38,7 @@ class InventorManager:
     # - - - - - - - - - - - - - - - -
     # Methods for managing Inventor application connection
 
-    def connect_to_inventor(self):
+    def connect_to_inventor(self) -> bool:
         """
         Connect to an existing Inventor application instance.
 
@@ -73,7 +73,7 @@ class InventorManager:
     # - - - - - - - - - - - - - - - -
     # Methods for selecting documents.
 
-    def select_document(self, filename: str = None):
+    def select_document(self, filename: str = None) -> bool:
         """
         Select a document by prompting user to file.
 
@@ -100,6 +100,38 @@ class InventorManager:
                 logger.error(f"Error selecting document '{filename}': {e}")
                 return False
 
+    # - - - - - - - - - - - - - - - -
+    # Methods for getting document properties.
+
+    def get_property(self, property_set: str, property: str) -> str:
+        """
+        Get property of document.
+
+        Args:
+            property_set (str): Set property in.
+            property (str): Name of property.
+
+        Returns:
+            str: Property value.
+        """
+        doc = self.app.ActiveDocument
+
+        # Get property set.
+        try:
+            property_set = doc.PropertySets.Item(property_set)
+        except Exception as e:
+            logger.error(f"Error getting property set: {e}")
+            return None
+
+        # Get property value.
+        try:
+            property_value = property_set.Item(property).Value
+            logger.info("Successfully got property value.")
+            return property_value
+        except Exception as e:
+            logger.error(f"Error getting property: {e}")
+            return None
+
 
 # - - - - - - - - - - - - - - - - - - - - -
 
@@ -123,4 +155,10 @@ if __name__ == "__main__":
 
     # Create an instance of InventorManager to test the connection.
     manager = InventorManager()
-    manager.select_document()
+    manager.select_document(
+        r"C:\Users\hnewe\Documents\tbre_automation_tools\example_files\INVENTOR\DOG TOOTH GEARBOX.iam"
+    )
+    part_number = manager.get_property("Design Tracking Properties", "Part Number")
+    description = manager.get_property("Design Tracking Properties", "Description")
+    print(part_number)
+    print(description)
