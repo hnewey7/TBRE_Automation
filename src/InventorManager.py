@@ -12,10 +12,10 @@ import os
 from datetime import datetime
 import json
 from tkinter import Tk
-from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askopenfilename, askdirectory
 import time
 
-from src.Part import Part
+from .Part import Part
 
 # - - - - - - - - - - - - - - - - - - - - -
 
@@ -196,6 +196,51 @@ class InventorManager:
             logger.error(f"Error getting property: {e}")
             return None
 
+    # - - - - - - - - - - - - - - - -
+    # Methods for exporting to HTML.
+
+    def export_parts_list(self, parts_list: list, directory: str = None) -> bool:
+        """
+        Exporting parts list to HTML file.
+
+        Args:
+            part_list (list): Parts list.
+            directory (str): Directory to save file, optional.
+
+        Returns:
+            bool: Successful or not.
+        """
+        if not directory:
+            # Select folder for saving file.
+            Tk().withdraw()
+            directory = askdirectory()
+
+        # Open file.
+        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        f = open(directory + f"/PARTS_LIST_{current_time}.html", "w")
+
+        # Create table.
+        table_content = "<table><tr><th>P/N</th><th>Part Name</th><th>Mass (kg)</th><th>X-axis (mm)</th><th>X-axis mass</th><th>Y-axis (mm)</th><th>Y-axis mass</th><th>Z-axis (mm)</th><th>Z-axis mass</th></tr>"
+        for part in parts_list:
+            table_content += f"<tr><td>{part.part_number}</td><td>{part.part_name}</td><td>{part.mass}</td><td>{part.x_axis}</td><td>{part.x_axis_mass}</td><td>{part.y_axis}</td><td>{part.y_axis_mass}</td><td>{part.z_axis}</td><td>{part.z_axis_mass}</td></tr>"
+        table_content += "</table>"
+
+        # HTML content.
+        html_template = f"""<html>
+            <head>
+            <title>PARTS LIST</title>
+            </head>
+            <body>
+            {table_content}
+            </body>
+            </html>
+        """
+        # Writing and closing.
+        f.write(html_template)
+        f.close()
+
+        return True
+
 
 # - - - - - - - - - - - - - - - - - - - - -
 
@@ -220,3 +265,4 @@ if __name__ == "__main__":
     # Create an instance of InventorManager to test the connection.
     manager = InventorManager()
     parts_list = manager.get_parts_list()
+    manager.export_parts_list(parts_list)

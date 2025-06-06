@@ -18,7 +18,7 @@
       "class": "logging.FileHandler",
       "level": "INFO",
       "formatter": "standard",
-      "filename": "logs/default_RoverRPi.log" 
+      "filename": "logs/default.log"
     }
   },
   "loggers": {

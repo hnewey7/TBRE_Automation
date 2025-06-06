@@ -174,3 +174,4 @@ cython_debug/
 .pypirc
 
 example_files/
+results/
