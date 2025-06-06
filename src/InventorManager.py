@@ -1,5 +1,12 @@
+"""
+InventorManager is a class that handles communcation with Inventor API.
+
+Created on Friday 30th May 2025.
+@author: Harry New
+
+"""
+
 import win32com.client
-from win32com.client import gencache
 import logging.config
 import os
 from datetime import datetime
@@ -7,6 +14,8 @@ import json
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 import time
+
+from src.Part import Part
 
 # - - - - - - - - - - - - - - - - - - - - -
 
@@ -48,10 +57,6 @@ class InventorManager:
         try:
             self.app = win32com.client.Dispatch("Inventor.Application")
             self.app.Visible = True
-            CastTo = gencache.EnsureModule(
-                "{D98A091D-3A0F-4C3E-B36E-61F62068D488}", 0, 1, 0
-            )
-            self.app = CastTo.Application(self.app)
             return True
         except Exception as e:
             logger.error(f"Error connecting to Inventor: {e}")
@@ -93,12 +98,73 @@ class InventorManager:
             return False
         else:
             try:
-                self.app.Documents.Open(filename)
+                self.doc = self.app.Documents.Open(filename, False)
                 logger.info(f"Selected document: {filename}")
+                if self.doc.DocumentType == 12291:
+                    self.assembly_doc = win32com.client.CastTo(
+                        self.doc, "AssemblyDocument"
+                    )
+                else:
+                    self.assembly_doc = win32com.client.CastTo(self.doc, "PartDocument")
                 return True
             except Exception as e:
                 logger.error(f"Error selecting document '{filename}': {e}")
                 return False
+
+    def get_parts_list(self, document: str = None) -> dict:
+        """
+        Get parts list for assembly document.
+
+        Args:
+            document (str): Document, optional
+
+        Returns:
+            dict: Parts list with number of occurrences.
+        """
+        # Opening document.
+        if not document:
+            self.select_document()
+        else:
+            self.select_document(document)
+
+        # Get occurrences.
+        occurrences = self.assembly_doc.ComponentDefinition.Occurrences
+        all_parts = []
+        self.get_part_occurrences(occurrences, all_parts)
+
+        return all_parts
+
+    def get_part_occurrences(self, occurrences, parts_list: list):
+        """
+        Get part occurrences.
+
+        Args:
+            occurrences: Occurrences
+            parts_list (list): List containing all parts.
+        """
+        for occ in occurrences:
+            doc_type = occ.DefinitionDocumentType
+            if doc_type == 12290:  # Part
+                self.select_document(occ.Definition.Document.FullDocumentName)
+                part = Part(self.assembly_doc)
+                parts_list.append(part)
+            elif doc_type == 12291:  # Assembly
+                self.get_part_occurrences(occ.SubOccurrences, parts_list)
+
+    def get_part_details(self, part: Part):
+        """
+        Get all details for an individual part.
+
+        Args:
+            part (Part): Part object.
+        """
+        self.select_document(part.filename)
+        part.part_number = self.get_property(
+            "Design Tracking Properties", "Part Number"
+        )
+        part.part_name = self.get_property("Design Tracking Properties", "Description")
+        part.mass = self.get_property("Design Tracking Properties", "Mass")
+        part.mass = self.get_property("Design Tracking Properties", "Mass")
 
     # - - - - - - - - - - - - - - - -
     # Methods for getting document properties.
@@ -114,11 +180,9 @@ class InventorManager:
         Returns:
             str: Property value.
         """
-        doc = self.app.ActiveDocument
-
         # Get property set.
         try:
-            property_set = doc.PropertySets.Item(property_set)
+            property_set = self.assembly_doc.PropertySets.Item(property_set)
         except Exception as e:
             logger.error(f"Error getting property set: {e}")
             return None
@@ -155,10 +219,4 @@ if __name__ == "__main__":
 
     # Create an instance of InventorManager to test the connection.
     manager = InventorManager()
-    manager.select_document(
-        r"C:\Users\hnewe\Documents\tbre_automation_tools\example_files\INVENTOR\DOG TOOTH GEARBOX.iam"
-    )
-    part_number = manager.get_property("Design Tracking Properties", "Part Number")
-    description = manager.get_property("Design Tracking Properties", "Description")
-    print(part_number)
-    print(description)
+    parts_list = manager.get_parts_list()
