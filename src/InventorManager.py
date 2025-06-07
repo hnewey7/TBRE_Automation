@@ -78,12 +78,13 @@ class InventorManager:
     # - - - - - - - - - - - - - - - -
     # Methods for selecting documents.
 
-    def select_document(self, filename: str = None) -> bool:
+    def select_document(self, filename: str = None, title: str = None) -> bool:
         """
         Select a document by prompting user to file.
 
         Args:
             filename (str): Filename, optional
+            title (str): Title for selecting file, optional.
 
         Returns:
             bool: True if the document is found and selected, False otherwise.
@@ -91,7 +92,7 @@ class InventorManager:
         if not filename:
             # Open a file dialog to select an Inventor document.
             Tk().withdraw()
-            filename = askopenfilename()
+            filename = askopenfilename(title=title)
 
         if not filename:
             logger.warning("No file selected.")
@@ -121,11 +122,13 @@ class InventorManager:
         Returns:
             dict: Parts list with number of occurrences.
         """
+        title = "Select an assembly file"
+
         # Opening document.
         if not document:
-            self.select_document()
+            self.select_document(title=title)
         else:
-            self.select_document(document)
+            self.select_document(document, title=title)
 
         # Get occurrences.
         occurrences = self.assembly_doc.ComponentDefinition.Occurrences
@@ -213,7 +216,7 @@ class InventorManager:
         if not directory:
             # Select folder for saving file.
             Tk().withdraw()
-            directory = askdirectory()
+            directory = askdirectory(title="Select folder to save results")
 
         # Open file.
         current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -259,7 +262,7 @@ if __name__ == "__main__":
         # Set the filename for the log file.
         config_dict["handlers"]["file"][
             "filename"
-        ] = f"logs/{current_time}/{current_time}_RoverRPi.log"
+        ] = f"logs/{current_time}/{current_time}.log"
         logging.config.dictConfig(config_dict)
 
     # Create an instance of InventorManager to test the connection.
