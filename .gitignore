@@ -175,3 +175,4 @@ cython_debug/
 example_files/
 results/
 *.zip
+specs/
