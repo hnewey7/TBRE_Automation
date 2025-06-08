@@ -147,11 +147,10 @@ class InventorManager:
         """
         for occ in occurrences:
             doc_type = occ.DefinitionDocumentType
-            if doc_type == 12290:  # Part
-                self.select_document(occ.Definition.Document.FullDocumentName)
-                part = Part(self.assembly_doc)
+            if doc_type == 12290:
+                part = Part(occ)
                 parts_list.append(part)
-            elif doc_type == 12291:  # Assembly
+            elif doc_type == 12291:
                 self.get_part_occurrences(occ.SubOccurrences, parts_list)
 
     def get_part_details(self, part: Part):

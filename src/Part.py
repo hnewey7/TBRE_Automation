@@ -44,34 +44,44 @@ class Part:
         Centre of mass along z-axis.
     """
 
-    def __init__(self, assembly_doc):
+    def __init__(self, occurrence=None, assembly_doc=None):
         """
         Initialise.
 
         Args:
-            assembly_doc: Assembly document for part.
+            occurrence: Part occurrence, optional.
+            assembly_doc: Assembly document, optional.
         """
-        prop_set = assembly_doc.ComponentDefinition.Document.PropertySets.Item(
-            "Design Tracking Properties"
-        )
-        comp_def = assembly_doc.ComponentDefinition.Document.ComponentDefinition
+        if occurrence:
+            prop_set = occurrence.Definition.Document.PropertySets.Item(
+                "Design Tracking Properties"
+            )
+        elif assembly_doc:
+            prop_set = assembly_doc.ComponentDefinition.Document.PropertySets.Item(
+                "Design Tracking Properties"
+            )
+        else:
+            logger.error("No occurrence or assembly document provided.")
+            raise ValueError
 
         # Initial values.
-        self.filename = assembly_doc.FullFileName
         self.part_number = prop_set.Item("Part Number").Value
         self.part_name = prop_set.Item("Description").Value
 
+        # Set reference document.
+        ref_doc = occurrence if occurrence else assembly_doc.ComponentDefinition
+
         try:
-            self.mass = comp_def.MassProperties.Mass
+            self.mass = ref_doc.MassProperties.Mass
             logger.info("Successfully got mass of part.")
         except Exception as e:
             self.mass = None
             logger.error(f"Unable to get mass of part, {e}")
 
         try:
-            self.x_axis = comp_def.MassProperties.CenterOfMass.X * 10
-            self.y_axis = comp_def.MassProperties.CenterOfMass.Y * 10
-            self.z_axis = comp_def.MassProperties.CenterOfMass.Z * 10
+            self.x_axis = ref_doc.MassProperties.CenterOfMass.X * 10
+            self.y_axis = ref_doc.MassProperties.CenterOfMass.Y * 10
+            self.z_axis = ref_doc.MassProperties.CenterOfMass.Z * 10
             logger.info("Successfully got centre of mass of part.")
 
             self.x_axis_mass = self.x_axis * self.mass

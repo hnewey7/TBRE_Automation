@@ -28,10 +28,9 @@ def test_part_init(document, data):
     assert ret
 
     # Get part.
-    part = Part(inv_manager.assembly_doc)
+    part = Part(assembly_doc=inv_manager.assembly_doc)
 
     # Check part values.
-    assert part.filename == document
     assert part.part_number == data["part_number"]
     assert part.part_name == data["part_name"]
     assert round(part.mass, 3) == round(data["mass"], 3)
