@@ -15,8 +15,8 @@ from datetime import datetime
 import json
 import os
 
-from FileAccessEventsHandler import FileAccessEventsHandler
-from MainWindow import MainWindow
+from .FileAccessEventsHandler import FileAccessEventsHandler
+from .MainWindow import MainWindow
 
 # - - - - - - - - - - - - - - - - - - - - -
 
@@ -136,18 +136,20 @@ class InventorAutomationApplication:
     # - - - - - - - - - - - - - - - -
     # Methods for using Inventor.
 
-    def select_file(self, text_var: Text = None) -> bool:
+    def select_file(self, filename: str = None, text_var: Text = None) -> bool:
         """
         Method for selecting file in Inventor.
 
         Args:
+            filename (str): Filename, optional
             text_var (Text): Text variable to update, optional
 
         Returns:
             bool: Successful or not.
         """
         # Create dialogue for selecting file.
-        filename = askopenfilename(title="Select a file")
+        if not filename:
+            filename = askopenfilename(title="Select a file")
 
         # Open file.
         try:
