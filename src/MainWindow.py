@@ -73,7 +73,9 @@ class LeftSideFrame(Frame):
 
         # Add select file button.
         select_file_button = Button(
-            self, text="Select File", command=commands["select_file"]
+            self,
+            text="Select File",
+            command=lambda: commands["select_file"](file_label),
         )
         select_file_button.grid(row=1, column=2, padx=5, pady=10)
 

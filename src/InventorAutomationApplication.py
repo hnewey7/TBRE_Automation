@@ -6,7 +6,8 @@ Created on Monday 9th June 2025.
 
 """
 
-from tkinter import Tk
+from tkinter import Tk, Text, END
+from tkinter.filedialog import askopenfilename
 import win32com.client
 import logging.config
 import time
@@ -37,7 +38,7 @@ class InventorAutomationApplication:
             Window for tkinter UI.
         """
         self.app = None  # Inventor Application
-        self.root = None
+        self.root = None  # Tkinter window.
 
         # Connect to Inventor application.
         ret = self.connect_to_inventor()
@@ -126,11 +127,46 @@ class InventorAutomationApplication:
         self.root.geometry("1200x540")
 
         # Get command mapping.
-        commands = {"select_file": None, "export_parts_list": None}
+        commands = {"select_file": self.select_file, "export_parts_list": None}
 
         # Add main window.
         main_window = MainWindow(self.root, commands)
         main_window.pack()
+
+    # - - - - - - - - - - - - - - - -
+    # Methods for using Inventor.
+
+    def select_file(self, text_var: Text = None) -> bool:
+        """
+        Method for selecting file in Inventor.
+
+        Args:
+            text_var (Text): Text variable to update, optional
+
+        Returns:
+            bool: Successful or not.
+        """
+        # Create dialogue for selecting file.
+        filename = askopenfilename(title="Select a file")
+
+        # Open file.
+        try:
+            # Open document.
+            self.doc = self.app.Documents.Open(filename, False)
+            logger.info(f"Selected document: {filename}")
+            if self.doc.DocumentType == 12291:
+                self.assembly_doc = win32com.client.CastTo(self.doc, "AssemblyDocument")
+            else:
+                self.assembly_doc = win32com.client.CastTo(self.doc, "PartDocument")
+
+            # Update text variable.
+            if text_var:
+                text_var.delete("1.0", END)
+                text_var.insert(END, filename.split("/")[-1])
+            return True, filename
+        except Exception as e:
+            logger.error(f"Error selecting document '{filename}': {e}")
+            return False, None
 
 
 # - - - - - - - - - - - - - - - - - - - - -
