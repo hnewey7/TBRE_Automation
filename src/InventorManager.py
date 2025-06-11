@@ -99,6 +99,7 @@ class InventorManager:
             return False
         else:
             try:
+                # Open document.
                 self.doc = self.app.Documents.Open(filename, False)
                 logger.info(f"Selected document: {filename}")
                 if self.doc.DocumentType == 12291:
@@ -266,5 +267,6 @@ if __name__ == "__main__":
 
     # Create an instance of InventorManager to test the connection.
     manager = InventorManager()
-    parts_list = manager.get_parts_list()
-    manager.export_parts_list(parts_list)
+    manager.select_document()
+    # parts_list = manager.get_parts_list()
+    # manager.export_parts_list(parts_list)

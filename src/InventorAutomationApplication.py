@@ -6,7 +6,7 @@ Created on Monday 9th June 2025.
 
 """
 
-from tkinter import Tk, Text, END
+from tkinter import Tk, Text, END, messagebox
 from tkinter.filedialog import askopenfilename
 import win32com.client
 import logging.config
@@ -15,7 +15,6 @@ from datetime import datetime
 import json
 import os
 
-from .FileAccessEventsHandler import FileAccessEventsHandler
 from .MainWindow import MainWindow
 
 # - - - - - - - - - - - - - - - - - - - - -
@@ -46,13 +45,6 @@ class InventorAutomationApplication:
             logger.error("Failed to connect to Inventor application.")
         else:
             logger.info("Successfully connected to Inventor application.")
-
-        # Set file access handler.
-        ret = self.add_file_access_handler(FileAccessEventsHandler)
-        if not ret:
-            logger.error("Failed to add file access handler.")
-        else:
-            logger.info("Successfully added file access handler.")
 
         # Create tkinter user interface.
         self.create_user_interface()
@@ -136,7 +128,12 @@ class InventorAutomationApplication:
     # - - - - - - - - - - - - - - - -
     # Methods for using Inventor.
 
-    def select_file(self, filename: str = None, text_var: Text = None) -> bool:
+    def select_file(
+        self,
+        filename: str = None,
+        text_var: Text = None,
+        suppress_message: bool = False,
+    ) -> bool:
         """
         Method for selecting file in Inventor.
 
@@ -147,9 +144,16 @@ class InventorAutomationApplication:
         Returns:
             bool: Successful or not.
         """
-        # Create dialogue for selecting file.
+        # Create dialog for selecting file.
         if not filename:
             filename = askopenfilename(title="Select a file")
+
+        # Info for resolve file dialog.
+        if not suppress_message:
+            messagebox.showinfo(
+                "Resolve File Dialog",
+                "Check Inventor for resolve file dialog and resolve if neccessary.",
+            )
 
         # Open file.
         try:

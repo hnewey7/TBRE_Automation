@@ -75,7 +75,7 @@ class LeftSideFrame(Frame):
         select_file_button = Button(
             self,
             text="Select File",
-            command=lambda: commands["select_file"](file_label),
+            command=lambda: commands["select_file"](text_var=file_label),
         )
         select_file_button.grid(row=1, column=2, padx=5, pady=10)
 

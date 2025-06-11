@@ -31,7 +31,7 @@ def test_select_file(filename: str):
     app = InventorAutomationApplication()
     assert app.app is not None
 
-    ret, ret_filename = app.select_file(filename)
+    ret, ret_filename = app.select_file(filename, suppress_message=True)
     assert ret
     assert ret_filename == filename
     assert app.assembly_doc is not None
