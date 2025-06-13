@@ -6,7 +6,7 @@ Created on Monday 9th June 2025.
 
 """
 
-from tkinter import Tk, Text, END, messagebox
+from tkinter import Tk, Text, END, messagebox, Frame
 from tkinter.filedialog import askopenfilename
 import win32com.client
 import logging.config
@@ -16,6 +16,7 @@ import json
 import os
 
 from .MainWindow import MainWindow
+from .Part import Part
 
 # - - - - - - - - - - - - - - - - - - - - -
 
@@ -117,13 +118,17 @@ class InventorAutomationApplication:
         self.root = Tk()
         self.root.title("Inventor Automation Application")
         self.root.geometry("1200x540")
+        self.root.resizable(False, False)
 
         # Get command mapping.
-        commands = {"select_file": self.select_file, "export_parts_list": None}
+        commands = {
+            "select_file": self.select_file,
+            "export_parts_list": self.export_parts_list,
+        }
 
         # Add main window.
-        main_window = MainWindow(self.root, commands)
-        main_window.pack()
+        self.main_window = MainWindow(self.root, commands)
+        self.main_window.pack()
 
     # - - - - - - - - - - - - - - - -
     # Methods for using Inventor.
@@ -167,12 +172,91 @@ class InventorAutomationApplication:
 
             # Update text variable.
             if text_var:
+                text_var.configure(state="normal")
                 text_var.delete("1.0", END)
                 text_var.insert(END, filename.split("/")[-1])
+                text_var.configure(state="disabled")
             return True, filename
         except Exception as e:
             logger.error(f"Error selecting document '{filename}': {e}")
             return False, None
+
+    def export_parts_list(self, file_text: Text, checkbox_frame: Frame) -> bool:
+        """
+        Export parts list function.
+
+        Args:
+            file_text (Text): Text variable for open file.
+            checkbox_frame (Frame): Checkbox frame containing options.
+
+        Return:
+            bool: Successful or not.
+        """
+        # Check valid file open.
+        if file_text.get("1.0", "1.4") == "None":
+            messagebox.showerror(
+                "Invalid Assembly File",
+                "Please select a valid assembly file before exporting the parts list.",
+            )
+            return False
+
+        # Get parts list of current assembly file.
+        occurrences = self.assembly_doc.ComponentDefinition.Occurrences
+        all_parts = []
+        self.get_part_occurrences(occurrences, all_parts)
+
+        # Store parts list for later use.
+        self.recent_parts_list = all_parts
+
+        # Generate HTML content.
+        self.recent_html_preview = self.create_html_parts_list(self.recent_parts_list)
+
+        # Display HTML content.
+        self.main_window.right_side_frame.update_html_preview(self.recent_html_preview)
+
+    def get_part_occurrences(self, occurrences, parts_list: list):
+        """
+        Get part occurrences.
+
+        Args:
+            occurrences: Occurrences
+            parts_list (list): List containing all parts.
+        """
+        for occ in occurrences:
+            doc_type = occ.DefinitionDocumentType
+            if doc_type == 12290:
+                part = Part(occ)
+                parts_list.append(part)
+            elif doc_type == 12291:
+                self.get_part_occurrences(occ.SubOccurrences, parts_list)
+
+    def create_html_parts_list(self, parts_list: list):
+        """
+        Create HTML parts list.
+
+        Args:
+            parts_list (list): Parts list.
+
+        Return:
+            str: HTML content.
+        """
+        # Create table.
+        table_content = "<table><tr><th>P/N</th><th>Part Name</th><th>Mass (kg)</th><th>X-axis (mm)</th><th>X-axis mass</th><th>Y-axis (mm)</th><th>Y-axis mass</th><th>Z-axis (mm)</th><th>Z-axis mass</th></tr>"
+        for part in parts_list:
+            table_content += f"<tr><td>{part.part_number}</td><td>{part.part_name}</td><td>{part.mass}</td><td>{part.x_axis}</td><td>{part.x_axis_mass}</td><td>{part.y_axis}</td><td>{part.y_axis_mass}</td><td>{part.z_axis}</td><td>{part.z_axis_mass}</td></tr>"
+        table_content += "</table>"
+
+        # HTML content.
+        html_template = f"""<html>
+            <head>
+            <title>PARTS LIST</title>
+            </head>
+            <body>
+            {table_content}
+            </body>
+            </html>
+        """
+        return html_template
 
 
 # - - - - - - - - - - - - - - - - - - - - -

@@ -33,10 +33,10 @@ class MainWindow(Frame):
         Frame.__init__(self, window)
 
         # Create side frames.
-        left_side_frame = LeftSideFrame(self, commands)
-        left_side_frame.grid(row=0, column=0, padx=20, sticky="n", pady=20)
-        right_side_frame = RightSideFrame(self)
-        right_side_frame.grid(row=0, column=1, padx=20, pady=20)
+        self.left_side_frame = LeftSideFrame(self, commands)
+        self.left_side_frame.grid(row=0, column=0, padx=20, sticky="n", pady=20)
+        self.right_side_frame = RightSideFrame(self)
+        self.right_side_frame.grid(row=0, column=1, padx=20, pady=20)
 
 
 # - - - - - - - - - - - - - - - - - - - - -
@@ -70,6 +70,7 @@ class LeftSideFrame(Frame):
         file_label = Text(self, wrap=WORD, height=1, width=30)
         file_label.grid(row=1, column=1, padx=5)
         file_label.insert(END, "None")
+        file_label.configure(state="disabled")
 
         # Add select file button.
         select_file_button = Button(
@@ -88,7 +89,11 @@ class LeftSideFrame(Frame):
 
         # Add export parts list.
         export_parts_list_button = Button(
-            self, text="Export Parts List", command=commands["export_parts_list"]
+            self,
+            text="Export Parts List",
+            command=lambda: commands["export_parts_list"](
+                file_text=file_label, checkbox_frame=checkbutton_frame
+            ),
         )
         export_parts_list_button.grid(row=2, column=2, pady=10)
 
@@ -119,17 +124,10 @@ class RightSideFrame(Frame):
         title_label.grid(row=0, column=0, pady=10)
 
         # Create HTML preview.
-        with open(
-            r"C:\Users\hnewe\Documents\tbre_automation_tools\results\PARTS_LIST_2025-06-08_12-51-54.html",
-            "r",
-        ) as f:
-            content = f.read()
-            rounded_count = self.round_numbers_in_html(content, 2)
-        formatted_content = f'<div style="font-size: 8px; zoom: 0.5; transform: scale(0.8); transform-origin: top left;">{rounded_count}</div>'
-        html_preview = HTMLLabel(
-            self, html=formatted_content, background="#FFFFFF", width=80, height=28
+        self.html_preview = HTMLLabel(
+            self, html="", background="#FFFFFF", width=80, height=28
         )
-        html_preview.grid(row=1, column=0, padx=20)
+        self.html_preview.grid(row=1, column=0, padx=20)
 
     def round_numbers_in_html(self, html, decimals=3):
         """
@@ -152,6 +150,22 @@ class RightSideFrame(Frame):
         number_regex = r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?"
 
         return re.sub(number_regex, round_match, html)
+
+    def update_html_preview(self, html_content: str):
+        """
+        Update HTML preview.
+
+        Args:
+            html_content (str): HTML cotent to update.
+        """
+        # Round numbers for better formatting.
+        rounded_count = self.round_numbers_in_html(html_content, 2)
+
+        # Additional formatting.
+        formatted_content = f'<div style="font-size: 8px; zoom: 0.5; transform: scale(0.8); transform-origin: top left;">{rounded_count}</div>'
+
+        # Update content.
+        self.html_preview.set_html(formatted_content)
 
 
 # - - - - - - - - - - - - - - - - - - - - -
