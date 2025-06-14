@@ -7,7 +7,7 @@ Created on Monday 9th June 2025.
 """
 
 from tkinter import Tk, Text, END, messagebox, Toplevel
-from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askopenfilename, asksaveasfile
 import win32com.client
 import logging.config
 import time
@@ -40,6 +40,7 @@ class InventorAutomationApplication:
         """
         self.app = None  # Inventor Application
         self.root = None  # Tkinter window.
+        self.recent_html_preview = None  # HTML preview.
 
         # Connect to Inventor application.
         ret = self.connect_to_inventor()
@@ -125,6 +126,7 @@ class InventorAutomationApplication:
         commands = {
             "select_file": self.select_file,
             "export_parts_list": self.export_parts_list,
+            "save_parts_list": self.save_parts_list,
         }
 
         # Get options.
@@ -363,6 +365,32 @@ class InventorAutomationApplication:
             </html>
         """
         return html_template
+
+    def save_parts_list(self):
+        """
+        Save parts list to computer.
+        """
+        # Check if parts list to save.
+        if self.recent_html_preview is None:
+            messagebox.showerror(
+                "Invalid Parts List",
+                "Please export a parts list to save.",
+            )
+            return False
+
+        # Get save location.
+        filetype = [("HTML file", "*.html")]
+        f = asksaveasfile("w", filetypes=filetype, defaultextension=filetype)
+        if f is None:
+            return
+        f.write(self.recent_html_preview)
+        f.close()
+
+        # Display save location.
+        messagebox.showinfo(
+            "Saved Parts List",
+            f"Parts list saved at {os.path.abspath(f.name)}",
+        )
 
 
 # - - - - - - - - - - - - - - - - - - - - -

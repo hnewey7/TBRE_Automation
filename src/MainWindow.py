@@ -100,7 +100,9 @@ class LeftSideFrame(Frame):
         export_parts_list_button.grid(row=2, column=2, pady=10)
 
         # Save parts list.
-        save_part_list_button = Button(self, text="Save Parts List", width=40)
+        save_part_list_button = Button(
+            self, text="Save Parts List", command=commands["save_parts_list"], width=40
+        )
         save_part_list_button.grid(row=3, column=0, columnspan=3, pady=10)
 
 
