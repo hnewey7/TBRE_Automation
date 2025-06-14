@@ -6,7 +6,7 @@ Created on Monday 9th June 2025.
 
 """
 
-from tkinter import Tk, Text, END, messagebox, Frame
+from tkinter import Tk, Text, END, messagebox, Frame, Toplevel
 from tkinter.filedialog import askopenfilename
 import win32com.client
 import logging.config
@@ -17,6 +17,7 @@ import os
 
 from .MainWindow import MainWindow
 from .Part import Part
+from .ProgressBarWindow import ProgressBarWindow
 
 # - - - - - - - - - - - - - - - - - - - - -
 
@@ -130,6 +131,26 @@ class InventorAutomationApplication:
         self.main_window = MainWindow(self.root, commands)
         self.main_window.pack()
 
+    def display_progress_bar(self, name: str):
+        """
+        Display progress bar.
+
+        Args:
+            name (str): Progress bar name/
+        """
+        # Create new window.
+        self.subwindow = Toplevel(self.root, takefocus=True)
+        self.subwindow.title(name)
+        self.subwindow.geometry("300x150")
+        self.subwindow.resizable(False, False)
+
+        # Create progress bar.
+        self.progress_bar = ProgressBarWindow(self.subwindow, name)
+        self.progress_bar.pack()
+
+        # Update subwindow.
+        self.subwindow.update()
+
     # - - - - - - - - - - - - - - - -
     # Methods for using Inventor.
 
@@ -200,10 +221,16 @@ class InventorAutomationApplication:
             )
             return False
 
+        # Display progress bar.
+        self.display_progress_bar("Exporting parts list...")
+
         # Get parts list of current assembly file.
         occurrences = self.assembly_doc.ComponentDefinition.Occurrences
         all_parts = []
-        self.get_part_occurrences(occurrences, all_parts)
+        self.get_part_occurrences(occurrences, all_parts, self.progress_bar)
+
+        # Close progress bar.
+        self.subwindow.destroy()
 
         # Store parts list for later use.
         self.recent_parts_list = all_parts
@@ -214,7 +241,9 @@ class InventorAutomationApplication:
         # Display HTML content.
         self.main_window.right_side_frame.update_html_preview(self.recent_html_preview)
 
-    def get_part_occurrences(self, occurrences, parts_list: list):
+    def get_part_occurrences(
+        self, occurrences, parts_list: list, progress_bar: ProgressBarWindow = None
+    ):
         """
         Get part occurrences.
 
@@ -222,12 +251,34 @@ class InventorAutomationApplication:
             occurrences: Occurrences
             parts_list (list): List containing all parts.
         """
+        # Set maximum for progress bar.
+        if progress_bar:
+            max_length = len(occurrences)
+            self.progress_bar.set_length(max_length)
+
         for occ in occurrences:
+            # Add to progress bar.
+            if progress_bar:
+                progress_bar.add_to_progress_bar()
+
+            # Handle occurrence.
             doc_type = occ.DefinitionDocumentType
             if doc_type == 12290:
+                # Update current task.
+                if progress_bar:
+                    progress_bar.update_task(
+                        f"Getting part details ({occ.Definition.Document.DisplayName})..."
+                    )
+                # Get part.
                 part = Part(occ)
                 parts_list.append(part)
             elif doc_type == 12291:
+                # Update current task.
+                if progress_bar:
+                    progress_bar.update_task(
+                        f"Getting occurrences ({occ.Definition.Document.DisplayName})..."
+                    )
+                # Get occurrencess.
                 self.get_part_occurrences(occ.SubOccurrences, parts_list)
 
     def create_html_parts_list(self, parts_list: list):
