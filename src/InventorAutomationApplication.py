@@ -6,7 +6,7 @@ Created on Monday 9th June 2025.
 
 """
 
-from tkinter import Tk, Text, END, messagebox, Frame, Toplevel
+from tkinter import Tk, Text, END, messagebox, Toplevel
 from tkinter.filedialog import askopenfilename
 import win32com.client
 import logging.config
@@ -15,7 +15,7 @@ from datetime import datetime
 import json
 import os
 
-from .MainWindow import MainWindow
+from .MainWindow import MainWindow, CheckButtonFrame
 from .Part import Part
 from .ProgressBarWindow import ProgressBarWindow
 
@@ -127,8 +127,13 @@ class InventorAutomationApplication:
             "export_parts_list": self.export_parts_list,
         }
 
+        # Get options.
+        self.options_config = {}
+        with open("config/option_config.json") as f:
+            self.options_config = json.load(f)
+
         # Add main window.
-        self.main_window = MainWindow(self.root, commands)
+        self.main_window = MainWindow(self.root, commands, self.options_config)
         self.main_window.pack()
 
     def display_progress_bar(self, name: str):
@@ -150,6 +155,22 @@ class InventorAutomationApplication:
 
         # Update subwindow.
         self.subwindow.update()
+
+    def get_option_variables(self, checkbutton_frame: CheckButtonFrame) -> list:
+        """
+        Getting option variables in CheckButtonFrame.
+
+        Args:
+            checkbutton_frame (CheckButtonFrame): Checkbutton frame.
+
+        Returns:
+            list: Selected options.
+        """
+        selected_variables = []
+        for variable in checkbutton_frame.option_variables.keys():
+            if checkbutton_frame.option_variables[variable].get() == 1:
+                selected_variables.append(variable)
+        return selected_variables
 
     # - - - - - - - - - - - - - - - -
     # Methods for using Inventor.
@@ -202,7 +223,9 @@ class InventorAutomationApplication:
             logger.error(f"Error selecting document '{filename}': {e}")
             return False, None
 
-    def export_parts_list(self, file_text: Text, checkbox_frame: Frame) -> bool:
+    def export_parts_list(
+        self, file_text: Text, checkbox_frame: CheckButtonFrame
+    ) -> bool:
         """
         Export parts list function.
 
@@ -221,6 +244,17 @@ class InventorAutomationApplication:
             )
             return False
 
+        # Get selected options.
+        selected_options = self.get_option_variables(checkbox_frame)
+
+        # Check valid options.
+        if len(selected_options) == 0:
+            messagebox.showerror(
+                "Invalid Parts List Options",
+                "Please select options to export the parts list.",
+            )
+            return False
+
         # Display progress bar.
         self.display_progress_bar("Exporting parts list...")
 
@@ -236,7 +270,9 @@ class InventorAutomationApplication:
         self.recent_parts_list = all_parts
 
         # Generate HTML content.
-        self.recent_html_preview = self.create_html_parts_list(self.recent_parts_list)
+        self.recent_html_preview = self.create_html_parts_list(
+            self.recent_parts_list, selected_options
+        )
 
         # Display HTML content.
         self.main_window.right_side_frame.update_html_preview(self.recent_html_preview)
@@ -281,20 +317,39 @@ class InventorAutomationApplication:
                 # Get occurrencess.
                 self.get_part_occurrences(occ.SubOccurrences, parts_list)
 
-    def create_html_parts_list(self, parts_list: list):
+    def create_html_parts_list(self, parts_list: list, selected_options: list):
         """
         Create HTML parts list.
 
         Args:
             parts_list (list): Parts list.
+            selected_options (list): Options to export.
 
         Return:
             str: HTML content.
         """
-        # Create table.
-        table_content = "<table><tr><th>P/N</th><th>Part Name</th><th>Mass (kg)</th><th>X-axis (mm)</th><th>X-axis mass</th><th>Y-axis (mm)</th><th>Y-axis mass</th><th>Z-axis (mm)</th><th>Z-axis mass</th></tr>"
+        # Get full info about options.
+        full_option_info = []
+        for selected in selected_options:
+            for i, option in enumerate(self.options_config["options"]):
+                if option["option_name"] == selected:
+                    full_option_info.append(self.options_config["options"][i])
+
+        # Create table heading.
+        table_content = "<table><tr>"
+        for option in full_option_info:
+            for display_name in option["display_name"]:
+                table_content += f"<th>{display_name}</th>"
+        table_content += "</tr>"
+
+        # Add table content.
         for part in parts_list:
-            table_content += f"<tr><td>{part.part_number}</td><td>{part.part_name}</td><td>{part.mass}</td><td>{part.x_axis}</td><td>{part.x_axis_mass}</td><td>{part.y_axis}</td><td>{part.y_axis_mass}</td><td>{part.z_axis}</td><td>{part.z_axis_mass}</td></tr>"
+            table_content += "<tr>"
+            for option in full_option_info:
+                for attribute in option["attribute_name"]:
+                    value = eval(f"part.{attribute}")
+                    table_content += f"<td>{value}</td>"
+            table_content += "</tr>"
         table_content += "</table>"
 
         # HTML content.

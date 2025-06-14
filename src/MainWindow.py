@@ -21,19 +21,20 @@ logger = logging.getLogger()
 
 
 class MainWindow(Frame):
-    def __init__(self, window, commands: dict):
+    def __init__(self, window, commands: dict, options_config: dict):
         """
         Main window of UI.
 
         Args:
             window: Top level window.
             commands (dict): Dictionary of commands.
+            options_config (dict): Dictionary of options.
         """
         # Create frame.
         Frame.__init__(self, window)
 
         # Create side frames.
-        self.left_side_frame = LeftSideFrame(self, commands)
+        self.left_side_frame = LeftSideFrame(self, commands, options_config)
         self.left_side_frame.grid(row=0, column=0, padx=20, sticky="n", pady=20)
         self.right_side_frame = RightSideFrame(self)
         self.right_side_frame.grid(row=0, column=1, padx=20, pady=20)
@@ -43,13 +44,14 @@ class MainWindow(Frame):
 
 
 class LeftSideFrame(Frame):
-    def __init__(self, window, commands: dict):
+    def __init__(self, window, commands: dict, options_config: dict):
         """
         Left side frame for holding buttons.
 
         Args:
             window: Parent window.
             commands (dict): Dictionary of commands.
+            options_config (dict): Dictionary of options.
         """
         # Create frame.
         Frame.__init__(self, window)
@@ -81,7 +83,7 @@ class LeftSideFrame(Frame):
         select_file_button.grid(row=1, column=2, padx=5, pady=10)
 
         # Create check button frame.
-        options = ["Part Number", "Description", "Mass", "Center of Mass"]
+        options = [option["option_name"] for option in options_config["options"]]
         checkbutton_frame = CheckButtonFrame(self, options, normal_font, 3)
 
         # Add check button frame.
