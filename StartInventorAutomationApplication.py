@@ -1,5 +1,5 @@
 """
-Script to get the parts list of an assembly document.
+Script to start InventorAutomationApplication.
 
 Created on Saturday 7th June 2025.
 @author: Harry New
@@ -11,7 +11,7 @@ import json
 import os
 from datetime import datetime
 
-from src.InventorManager import InventorManager
+from src.InventorAutomationApplication import InventorAutomationApplication
 
 # - - - - - - - - - - - - - - - - - - - - -
 
@@ -39,11 +39,6 @@ if __name__ == "__main__":
         ] = f"logs/{current_time}/{current_time}.log"
         logging.config.dictConfig(config_dict)
 
-    # Start InventorManager.
-    manager = InventorManager()
-
-    # Get parts list.
-    parts_list = manager.get_parts_list()
-
-    # Export parts list.
-    manager.export_parts_list(parts_list)
+    # Start InventorAutomationApplication.
+    app = InventorAutomationApplication()
+    app.run()
