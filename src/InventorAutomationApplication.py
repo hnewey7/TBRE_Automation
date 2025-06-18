@@ -272,6 +272,12 @@ class InventorAutomationApplication:
         # Store parts list for later use.
         self.recent_parts_list = all_parts
 
+        # Create pandas df.
+        self.dataframe = self.create_dataframe(self.recent_parts_list, selected_options)
+
+        # Copy to clipboard.
+        self.dataframe.to_clipboard(index=False, excel=True)
+
         # Generate HTML content.
         self.recent_html_preview = self.create_html_parts_list(
             self.recent_parts_list, selected_options
@@ -279,6 +285,12 @@ class InventorAutomationApplication:
 
         # Display HTML content.
         self.main_window.right_side_frame.update_html_preview(self.recent_html_preview)
+
+        # Information box about clipboard.
+        messagebox.showinfo(
+            "Copied To Clipboard",
+            "Parts list is copied to clipboard so can be directly pasted into excel.",
+        )
 
     def get_part_occurrences(
         self, occurrences, parts_list: list, progress_bar: ProgressBarWindow = None
