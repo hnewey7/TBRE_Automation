@@ -417,11 +417,11 @@ class InventorAutomationApplication:
         # Add each part to dataframe.
         rows = []
         for part in parts_list:
+            new_row = {}
             for option in full_option_info:
-                new_row = {}
                 for i, display_name in enumerate(option["display_name"]):
                     new_row[display_name] = eval(f'part.{option["attribute_name"][i]}')
-                rows.append(new_row)
+            rows.append(new_row)
 
         # Create dataframe.
         dataframe = DataFrame(rows, columns=columns)
