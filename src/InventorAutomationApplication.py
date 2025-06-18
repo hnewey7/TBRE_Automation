@@ -14,6 +14,7 @@ import time
 from datetime import datetime
 import json
 import os
+from pandas import DataFrame
 
 from .MainWindow import MainWindow, CheckButtonFrame
 from .Part import Part
@@ -391,6 +392,40 @@ class InventorAutomationApplication:
             "Saved Parts List",
             f"Parts list saved at {os.path.abspath(f.name)}",
         )
+
+    def create_dataframe(self, parts_list: list, selected_options: list) -> DataFrame:
+        """
+        Create pandas dataframe from parts list.
+
+        Args:
+            parts_list (list): List of parts.
+            selected_options (list): List of selected options.
+        """
+        # Get full info about options.
+        full_option_info = []
+        for selected in selected_options:
+            for i, option in enumerate(self.options_config["options"]):
+                if option["option_name"] == selected:
+                    full_option_info.append(self.options_config["options"][i])
+
+        # Get columns.
+        columns = []
+        for option in full_option_info:
+            for display_name in option["display_name"]:
+                columns.append(display_name)
+
+        # Add each part to dataframe.
+        rows = []
+        for part in parts_list:
+            for option in full_option_info:
+                new_row = {}
+                for i, display_name in enumerate(option["display_name"]):
+                    new_row[display_name] = eval(f'part.{option["attribute_name"][i]}')
+                rows.append(new_row)
+
+        # Create dataframe.
+        dataframe = DataFrame(rows, columns=columns)
+        return dataframe
 
 
 # - - - - - - - - - - - - - - - - - - - - -
