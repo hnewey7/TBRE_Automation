@@ -176,3 +176,4 @@ example_files/
 results/
 *.zip
 specs/
+generate_requirements.sh
