@@ -69,16 +69,16 @@ class LeftSideFrame(Frame):
         # Add selected file label.
         selected_file_label = Label(self, text="Selected File:", font=normal_font)
         selected_file_label.grid(row=1, column=0, padx=5)
-        file_label = Text(self, wrap=WORD, height=1, width=30)
-        file_label.grid(row=1, column=1, padx=5)
-        file_label.insert(END, "None")
-        file_label.configure(state="disabled")
+        self.file_label = Text(self, wrap=WORD, height=1, width=30)
+        self.file_label.grid(row=1, column=1, padx=5)
+        self.file_label.insert(END, "None")
+        self.file_label.configure(state="disabled")
 
         # Add select file button.
         select_file_button = Button(
             self,
             text="Select File",
-            command=lambda: commands["select_file"](text_var=file_label),
+            command=lambda: commands["select_file"](text_var=self.file_label),
         )
         select_file_button.grid(row=1, column=2, padx=5, pady=10)
 
@@ -94,7 +94,7 @@ class LeftSideFrame(Frame):
             self,
             text="Export Parts List",
             command=lambda: commands["export_parts_list"](
-                file_text=file_label, checkbox_frame=checkbutton_frame
+                file_text=self.file_label, checkbox_frame=checkbutton_frame
             ),
         )
         export_parts_list_button.grid(row=2, column=2, pady=10)

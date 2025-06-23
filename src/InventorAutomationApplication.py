@@ -42,6 +42,7 @@ class InventorAutomationApplication:
         self.app = None  # Inventor Application
         self.root = None  # Tkinter window.
         self.recent_html_preview = None  # HTML preview.
+        self.assembly_doc = None  # Assembly doc.
 
         # Connect to Inventor application.
         ret = self.connect_to_inventor()
@@ -53,10 +54,15 @@ class InventorAutomationApplication:
         # Create tkinter user interface.
         self.create_user_interface()
 
+        # Set flag for updating file name.
+        self.update_file_name_flag = True
+
     def run(self):
         """
         Running Inventor Automation Application.
         """
+        # Start update file loop.
+        self.update_file_name()
         # Run user interface.
         self.root.mainloop()
 
@@ -175,6 +181,38 @@ class InventorAutomationApplication:
                 selected_variables.append(variable)
         return selected_variables
 
+    def update_file_name(self):
+        """
+        Updating file name.
+        """
+        # Flag for stopping.
+        if not self.update_file_name_flag:
+            return
+
+        # Check for active document.
+        if not self.check_active_document():
+            document_name = "None"
+        else:
+            # Get active document name.
+            document_name = self.app.ActiveDocument.FullFileName
+
+            # Select document.
+            if (
+                self.assembly_doc is None
+                or document_name != self.assembly_doc.FullFileName
+            ):
+                self.select_file(document_name, suppress_message=True)
+
+        # Update file name widget.
+        text_var = self.main_window.left_side_frame.file_label
+        text_var.configure(state="normal")
+        text_var.delete("1.0", END)
+        text_var.insert(END, document_name.split("\\")[-1])
+        text_var.configure(state="disabled")
+
+        # Repeat every second.
+        self.root.after(1000, self.update_file_name)
+
     # - - - - - - - - - - - - - - - -
     # Methods for using Inventor.
 
@@ -194,6 +232,9 @@ class InventorAutomationApplication:
         Returns:
             bool: Successful or not.
         """
+        # Disable update file name.
+        self.update_file_name_flag = False
+
         # Create dialog for selecting file.
         if not filename:
             filename = askopenfilename(title="Select a file")
@@ -221,9 +262,17 @@ class InventorAutomationApplication:
                 text_var.delete("1.0", END)
                 text_var.insert(END, filename.split("/")[-1])
                 text_var.configure(state="disabled")
+
+            # Re-enable update file name flag.
+            self.update_file_name_flag = True
+
             return True, filename
         except Exception as e:
             logger.error(f"Error selecting document '{filename}': {e}")
+            # Re-enable update file name flag.
+            self.update_file_name_flag = True
+            self.update_file_name()
+
             return False, None
 
     def export_parts_list(
