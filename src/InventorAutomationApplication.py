@@ -14,7 +14,7 @@ import time
 from datetime import datetime
 import json
 import os
-from pandas import DataFrame
+import pandas as pd
 
 from .MainWindow import MainWindow, CheckButtonFrame
 from .Part import Part
@@ -308,6 +308,10 @@ class InventorAutomationApplication:
             self.progress_bar.set_length(max_length)
 
         for occ in occurrences:
+            # Check valid occurence.
+            if not self.check_valid_occurrence_definition(occ):
+                continue
+
             # Add to progress bar.
             if progress_bar:
                 progress_bar.add_to_progress_bar()
@@ -405,7 +409,9 @@ class InventorAutomationApplication:
             f"Parts list saved at {os.path.abspath(f.name)}",
         )
 
-    def create_dataframe(self, parts_list: list, selected_options: list) -> DataFrame:
+    def create_dataframe(
+        self, parts_list: list, selected_options: list
+    ) -> pd.DataFrame:
         """
         Create pandas dataframe from parts list.
 
@@ -436,8 +442,37 @@ class InventorAutomationApplication:
             rows.append(new_row)
 
         # Create dataframe.
-        dataframe = DataFrame(rows, columns=columns)
+        dataframe = pd.DataFrame(rows, columns=columns)
         return dataframe
+
+    def check_active_document(self) -> bool:
+        """
+        Check if document is active in Inventor.
+
+        Returns:
+            bool: Active document or not.
+        """
+        if self.app.ActiveDocument is None:
+            return False
+        else:
+            return True
+
+    def check_valid_occurrence_definition(self, occurence) -> bool:
+        """
+        Check valid definition for occurrence.
+
+        Args:
+            occurence: Occurrence.
+
+        Returns:
+            bool: Valid occurrence.
+        """
+        try:
+            type(occurence.Definition)
+            return True
+        except Exception as e:
+            logger.error(f"Invalid occurrence definition: {e}")
+            return False
 
 
 # - - - - - - - - - - - - - - - - - - - - -
