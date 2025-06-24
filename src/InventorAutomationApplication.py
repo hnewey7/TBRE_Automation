@@ -249,7 +249,7 @@ class InventorAutomationApplication:
         # Open file.
         try:
             # Open document.
-            self.doc = self.app.Documents.Open(filename, False)
+            self.doc = self.app.Documents.Open(filename, True)
             logger.info(f"Selected document: {filename}")
             if self.doc.DocumentType == 12291:
                 self.assembly_doc = win32com.client.CastTo(self.doc, "AssemblyDocument")
